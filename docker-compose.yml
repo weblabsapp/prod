@@ -1,0 +1,70 @@
+version: '3.3'
+services:
+  db:
+    image: "mysql:8.0.2"
+    container_name: weblabs-prod-db
+    volumes:
+      - ${DB_PATH_MAPPING}:/var/lib/mysql
+    ports:
+      - "3307:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+    restart: always
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "${DB_HOST}", "-P", "${DB_PORT}", "-u", "root", "-p", "${MYSQL_ROOT_PASSWORD}" ]
+      interval: 1s
+      timeout: 3s
+      retries: 30
+    network_mode: bridge
+
+  redis:
+    image: "redis:6"
+    container_name: weblabs-prod-redis
+    command: >
+      --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - ${REDIS_PATH_MAPPING}:/data
+    env_file:
+      - .env
+    ports:
+      - "6377:6379"
+    restart: always
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+    network_mode: bridge
+
+  migrations:
+    build:
+      context: .
+    working_dir: /app
+    image: weblabs-app:prod
+    command: php artisan migrate --no-interaction --force
+    env_file:
+      - .env
+    network_mode: bridge
+    depends_on:
+      db:
+        condition: service_healthy
+
+  app:
+    working_dir: /app
+    image: weblabs-app:prod
+    container_name: weblabs-prod-app
+    command: php artisan serve --host=0.0.0.0
+    ports:
+      - "1003:8000"
+    restart: always
+    env_file:
+      - .env
+    network_mode: bridge
+    depends_on:
+      db:
+        condition: service_healthy
+      migrations:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+
