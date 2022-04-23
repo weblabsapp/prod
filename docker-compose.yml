@@ -69,8 +69,6 @@ services:
         condition: service_completed_successfully
       redis:
         condition: service_healthy
-#    healthcheck:
-#      test: curl -o http://localhost:8000
 
 # Volumes
 volumes:
