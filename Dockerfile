@@ -43,3 +43,6 @@ RUN echo "Installing Composer" && rm -rf vendor composer.lock && \
     curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer && \
     composer clearcache && \
     composer install
+
+# Clear previous cache
+RUN php artisan optimize:clear
