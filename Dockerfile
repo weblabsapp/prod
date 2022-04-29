@@ -27,7 +27,7 @@ RUN ssh-keyscan github.com >> /root/.ssh/known_hosts
 
 # Clone project from remote git repository (master) branch
 RUN echo "Getting project files ..."
-RUN git clone git@github.com:weblabsapp/app.git .
+RUN git -C . pull || git clone git@github.com:weblabsapp/app.git .
 
 # Permit artisan to be executable
 RUN chmod +x artisan
