@@ -29,6 +29,10 @@ RUN ssh-keyscan github.com >> /root/.ssh/known_hosts
 RUN echo "Getting project files ..."
 RUN git -C . pull || git clone git@github.com:weblabsapp/app.git .
 
+# Copy SSH config (important to be after git pull | clone)
+COPY .ssh/config ~/.ssh/
+RUN chmod 600 /root/.ssh/nova
+
 # Permit artisan to be executable
 RUN chmod +x artisan
 
@@ -42,7 +46,7 @@ RUN chmod +x utilities/install-php-extensions.sh && ./utilities/install-php-exte
 RUN echo "Installing Composer" && rm -rf vendor composer.lock && \
     curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer && \
     composer clearcache && \
-    composer install
+    composer install --no-dev
 
 # Clear previous cache
 RUN php artisan optimize:clear

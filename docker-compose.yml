@@ -56,6 +56,8 @@ services:
     image: weblabs-app-prod
     container_name: weblabs-prod-app
     command: php artisan serve --host=0.0.0.0
+    volumes:
+      - .ssh:/app/.ssh
     ports:
       - ${APP_PORT}:8000
     restart: always
@@ -69,6 +71,20 @@ services:
         condition: service_completed_successfully
       redis:
         condition: service_healthy
+
+  queue:
+    working_dir: /app
+    image: weblabs-app-prod
+    command: php artisan queue:work
+    container_name: weblabs-prod-queue
+    env_file: .env
+    network_mode: bridge
+    restart: always
+    volumes:
+      - .ssh:/app/.ssh
+    depends_on:
+      - db
+      - redis
 
 # Volumes
 volumes:
